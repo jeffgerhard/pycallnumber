@@ -8,8 +8,15 @@ from builtins import object
 import functools
 import inspect
 import re
-import fcntl
-import termios
+try:
+    import fcntl
+except:
+    pass
+try:
+    import termios
+except:
+    pass
+import sys
 import struct
 import importlib
 import types
@@ -149,12 +156,15 @@ def get_terminal_size(default_width=100, default_height=50):
         fmt = 'HHHH'
 
     winsize_struct = struct.pack(fmt, 0, 0, 0, 0)
-    try:
-        packed_winsize = fcntl.ioctl(0, termios.TIOCGWINSZ, winsize_struct)
-    except IOError:
-        height, width = (default_height, default_width)
+    if 'fcntl' in sys.modules and 'termios' in sys.modules:
+        try:
+            packed_winsize = fcntl.ioctl(0, termios.TIOCGWINSZ, winsize_struct)
+        except IOError:
+            height, width = (default_height, default_width)
+        else:
+            height, width, _, _ = struct.unpack(fmt, packed_winsize)
     else:
-        height, width, _, _ = struct.unpack(fmt, packed_winsize)
+        height, width = (default_height, default_width)
     return width, height
 
 
